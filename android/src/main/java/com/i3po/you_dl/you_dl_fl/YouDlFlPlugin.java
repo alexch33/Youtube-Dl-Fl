@@ -53,14 +53,19 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, Activity
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
-    } else if (call.method.equals("getStreamInfo")) {
-      handleRequestStreamInfo(result, call);
-    } else if (call.method.equals("getSingleLink")) {
-      handleGetSingleLink(result, call);
-    } else {
-      result.notImplemented();
+    switch (call.method) {
+      case "getPlatformVersion":
+        result.success("Android " + android.os.Build.VERSION.RELEASE);
+        break;
+      case "getStreamInfo":
+        handleRequestStreamInfo(result, call);
+        break;
+      case "getSingleLink":
+        handleGetSingleLink(result, call);
+        break;
+      default:
+        result.notImplemented();
+        break;
     }
   }
 
