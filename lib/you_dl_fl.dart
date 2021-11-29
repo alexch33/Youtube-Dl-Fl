@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 class YouDlFl {
   static const MethodChannel _channel = MethodChannel('you_dl_fl');
+  static const EventChannel _eventChannel = EventChannel('you_dl_fl_events');
+  static Function(dynamic data)? downloadCallback;
 
   static Future<String?> get platformVersion async {
     final String? version = await _channel.invokeMethod('getPlatformVersion');
@@ -17,6 +20,23 @@ class YouDlFl {
     return link;
   }
 
+  static Future<List<VideoFormat>> getAvailableFormats(String url) async {
+    final data =
+        await _channel.invokeMethod('getAvailableFormats', {"url": url});
+    Set<VideoFormat> formats = {};
+    
+    if (data['exitCode'] > 0) {
+      throw (data['error']);
+    }
+
+    for (var data in data["out"]) {
+      VideoFormat format = VideoFormat.fromMap(data);
+      formats.add(format);
+    }
+
+    return formats.toList();
+  }
+
   // getStreamInfo
   static Future<YoutubeDlVideoInfo?> getStreamInfo(String url) async {
     final result = await _channel
@@ -27,6 +47,16 @@ class YouDlFl {
     }
 
     return null;
+  }
+
+  static void startDownload(String url, String downloadPath, String filename) {
+    var subscription = _eventChannel.receiveBroadcastStream(
+        {"url": url, "path": downloadPath, "filename": filename});
+    subscription.listen((event) {
+      if (downloadCallback != null) {
+        downloadCallback!(event);
+      }
+    });
   }
 }
 
@@ -67,4 +97,38 @@ class YoutubeDlVideoInfo {
         thumbnail: json['thumbnail'],
         resolution: json['resolution'],
       );
+}
+
+class VideoFormat {
+  final String quality;
+  final String resolution;
+  String format;
+
+  VideoFormat({
+    required this.quality,
+    required this.resolution,
+    required this.format
+  });
+
+  factory VideoFormat.fromMap(Map<dynamic, dynamic> json) => VideoFormat(
+        quality: json['quality'],
+        resolution: json['resolution'],
+        format: json['format']
+      );
+
+  @override
+  String toString() {
+    return "$format $quality $resolution";
+  }
+
+  @override
+  int get hashCode =>
+      hashValues(quality, format, resolution);
+
+  @override
+  operator ==(o) =>
+      o is VideoFormat &&
+      o.format == format &&
+      o.resolution == resolution &&
+      o.quality == quality;
 }
