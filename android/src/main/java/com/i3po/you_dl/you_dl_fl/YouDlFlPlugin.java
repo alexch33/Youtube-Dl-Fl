@@ -84,34 +84,31 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   }
 
   private void handleRequestStreamInfo(Result result, MethodCall call) {
-    AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-            String url = call.argument("url");
+    AsyncTask.execute(() -> {
+        String url = call.argument("url");
 
-            YoutubeDLRequest request = new YoutubeDLRequest(url);
-            request.addOption("-f", "best");
-            VideoInfo streamInfo = null;
-            try {
-                streamInfo = YoutubeDL.getInstance().getInfo(request);
-                Map<String, Object> resultData = new HashMap<>();
+        YoutubeDLRequest request = new YoutubeDLRequest(url);
+        request.addOption("-f", "best");
+        VideoInfo streamInfo = null;
+        try {
+            streamInfo = YoutubeDL.getInstance().getInfo(request);
+            Map<String, Object> resultData = new HashMap<>();
 
-                resultData.put("title", streamInfo.getTitle());
-                resultData.put("url", streamInfo.getUrl());
-                resultData.put("httpHeaders", streamInfo.getHttpHeaders());
-                resultData.put("duration", streamInfo.getDuration());
-                resultData.put("height", streamInfo.getHeight());
-                resultData.put("width", streamInfo.getWidth());
-                resultData.put("format", streamInfo.getFormat());
-                resultData.put("fullTitle", streamInfo.getFulltitle());
-                resultData.put("thumbnail", streamInfo.getThumbnail());
-                resultData.put("resolution", streamInfo.getResolution());
+            resultData.put("title", streamInfo.getTitle());
+            resultData.put("url", streamInfo.getUrl());
+            resultData.put("httpHeaders", streamInfo.getHttpHeaders());
+            resultData.put("duration", streamInfo.getDuration());
+            resultData.put("height", streamInfo.getHeight());
+            resultData.put("width", streamInfo.getWidth());
+            resultData.put("format", streamInfo.getFormat());
+            resultData.put("fullTitle", streamInfo.getFulltitle());
+            resultData.put("thumbnail", streamInfo.getThumbnail());
+            resultData.put("resolution", streamInfo.getResolution());
 
-                handler.post(() -> result.success(resultData));
-            } catch (YoutubeDLException | InterruptedException e) {
-                handler.post(() -> result.success(null));
-                e.printStackTrace();
-            }
+            handler.post(() -> result.success(resultData));
+        } catch (YoutubeDLException | InterruptedException e) {
+            handler.post(() -> result.success(null));
+            e.printStackTrace();
         }
     });
   }
