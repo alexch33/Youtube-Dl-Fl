@@ -84,46 +84,54 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   }
 
   private void handleRequestStreamInfo(Result result, MethodCall call) {
-    String url = call.argument("url");
+    AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+            String url = call.argument("url");
 
-    YoutubeDLRequest request = new YoutubeDLRequest(url);
-    request.addOption("-f", "best");
-    VideoInfo streamInfo = null;
-    try {
-      streamInfo = YoutubeDL.getInstance().getInfo(request);
-      Map<String, Object> resultData = new HashMap<>();
+            YoutubeDLRequest request = new YoutubeDLRequest(url);
+            request.addOption("-f", "best");
+            VideoInfo streamInfo = null;
+            try {
+                streamInfo = YoutubeDL.getInstance().getInfo(request);
+                Map<String, Object> resultData = new HashMap<>();
 
-      resultData.put("title", streamInfo.getTitle());
-      resultData.put("url", streamInfo.getUrl());
-      resultData.put("httpHeaders", streamInfo.getHttpHeaders());
-      resultData.put("duration", streamInfo.getDuration());
-      resultData.put("height", streamInfo.getHeight());
-      resultData.put("width", streamInfo.getWidth());
-      resultData.put("format", streamInfo.getFormat());
-      resultData.put("fullTitle", streamInfo.getFulltitle());
-      resultData.put("thumbnail", streamInfo.getThumbnail());
-      resultData.put("resolution", streamInfo.getResolution());
+                resultData.put("title", streamInfo.getTitle());
+                resultData.put("url", streamInfo.getUrl());
+                resultData.put("httpHeaders", streamInfo.getHttpHeaders());
+                resultData.put("duration", streamInfo.getDuration());
+                resultData.put("height", streamInfo.getHeight());
+                resultData.put("width", streamInfo.getWidth());
+                resultData.put("format", streamInfo.getFormat());
+                resultData.put("fullTitle", streamInfo.getFulltitle());
+                resultData.put("thumbnail", streamInfo.getThumbnail());
+                resultData.put("resolution", streamInfo.getResolution());
 
-      result.success(resultData);
-    } catch (YoutubeDLException | InterruptedException e) {
-      result.success(null);
-      e.printStackTrace();
-    }
+                handler.post(() -> result.success(resultData));
+            } catch (YoutubeDLException | InterruptedException e) {
+                handler.post(() -> result.success(null));
+                e.printStackTrace();
+            }
+        }
+    });
   }
 
   private void handleGetSingleLink(Result result, MethodCall call) {
-    String url = call.argument("url");
+    AsyncTask.execute(() -> {
+        String url = call.argument("url");
 
-    YoutubeDLRequest request = new YoutubeDLRequest(url);
-    request.addOption("-f", "best");
-    VideoInfo streamInfo = null;
-    try {
-      streamInfo = YoutubeDL.getInstance().getInfo(request);
-      result.success(streamInfo.getUrl());
-    } catch (YoutubeDLException | InterruptedException e) {
-      result.success(null);
-      e.printStackTrace();
-    }
+        YoutubeDLRequest request = new YoutubeDLRequest(url);
+        request.addOption("-f", "best");
+        VideoInfo streamInfo = null;
+        try {
+            streamInfo = YoutubeDL.getInstance().getInfo(request);
+            VideoInfo finalStreamInfo = streamInfo;
+            handler.post(() -> result.success(finalStreamInfo.getUrl()));
+        } catch (YoutubeDLException | InterruptedException e) {
+            handler.post(() -> result.success(null));
+            e.printStackTrace();
+        }
+    });
   }
 
   @Override
