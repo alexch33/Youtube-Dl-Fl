@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 
 class YouDlFl {
   static const MethodChannel _channel = MethodChannel('you_dl_fl');
+  static const EventChannel _eventChannel = EventChannel('you_dl_fl_events');
+  static Function(dynamic data)? downloadCallback;
 
   static Future<String?> get platformVersion async {
     final String? version = await _channel.invokeMethod('getPlatformVersion');
@@ -27,6 +29,16 @@ class YouDlFl {
     }
 
     return null;
+  }
+
+  static void startDownload(String url, String downloadPath, String filename) {
+    var subscription = _eventChannel.receiveBroadcastStream(
+        {"url": url, "path": downloadPath, "filename": filename});
+    subscription.listen((event) {
+      if (downloadCallback != null) {
+        downloadCallback!(event);
+      }
+    });
   }
 }
 

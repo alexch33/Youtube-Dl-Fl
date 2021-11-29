@@ -1,6 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:you_dl_fl/you_dl_fl.dart';
 
 void main() {
@@ -15,7 +17,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  YoutubeDlVideoInfo? _data;
+  String? _data;
 
   @override
   void initState() {
@@ -24,24 +26,31 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> initPlatformState() async {
-    YoutubeDlVideoInfo? data;
-
-    data = await YouDlFl.getStreamInfo("https://youtu.be/Pv61yEcOqpw");
-
-    setState(() {
-      _data = data;
-    });
+    YouDlFl.downloadCallback = (data) {
+      setState(() {
+        _data = data["progress"];
+      });
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            Directory? dir = await getExternalStorageDirectory();
+            if (dir != null) {
+              YouDlFl.startDownload(
+                  "https://vimeo.com/22439234", dir.path, "tst.mp4");
+            }
+          },
+        ),
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Url is: ${_data?.url ?? "null"}\n'),
+          child: Text('Url is: ${_data ?? "null"}\n'),
         ),
       ),
     );

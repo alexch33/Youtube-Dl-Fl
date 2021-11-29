@@ -1,6 +1,9 @@
 package com.i3po.you_dl.you_dl_fl;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -10,11 +13,14 @@ import com.yausername.youtubedl_android.YoutubeDLException;
 import com.yausername.youtubedl_android.YoutubeDLRequest;
 import com.yausername.youtubedl_android.mapper.VideoInfo;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import android.os.Handler;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -22,9 +28,10 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 
 /** YouDlFlPlugin */
-public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
+public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler, ActivityAware {
   private static final String TAG = "YouDlFlPlugin";
   private static boolean isInited;
+  private final Handler handler = new Handler();
 
   /// The MethodChannel that will the communication between Flutter and native
   /// Android
@@ -33,11 +40,18 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, Activity
   /// and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
+  private EventChannel eventChannel;
+
+  private Map<Object, Runnable> listeners = new HashMap<>();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "you_dl_fl");
     channel.setMethodCallHandler(this);
+
+    eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), "you_dl_fl_events");
+    eventChannel.setStreamHandler(this);
+
     initializeYouDl(flutterPluginBinding.getApplicationContext());
   }
 
@@ -90,8 +104,6 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, Activity
       resultData.put("thumbnail", streamInfo.getThumbnail());
       resultData.put("resolution", streamInfo.getResolution());
 
-      // JSONObject jsonResult = new JSONObject(resultData);
-
       result.success(resultData);
     } catch (YoutubeDLException | InterruptedException e) {
       result.success(null);
@@ -138,5 +150,59 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, Activity
   @Override
   public void onDetachedFromActivity() {
     // TODO: your plugin is no longer associated with an Activity. Clean up references.
+  }
+
+  @Override
+  public void onListen(Object arguments, EventChannel.EventSink events) {
+    startListening(arguments, events);
+  }
+
+  @Override
+  public void onCancel(Object arguments) {
+    cancelListening(arguments);
+  }
+
+    void startListening(Object listener, EventChannel.EventSink emitter) {
+        final Handler handler = new Handler();
+        listeners.put(listener, () -> {
+            if (listeners.containsKey(listener)) {
+                AsyncTask.execute(() -> handleDownload(listener, emitter));
+            }
+        });
+        handler.post(listeners.get(listener));
+    }
+
+    private void handleDownload(Object arguments, EventChannel.EventSink events) {
+        HashMap<String, String> args = (HashMap<String, String>) arguments;
+
+        String url = args.get("url");
+        String path = args.get("path");
+        String filename = args.get("filename");
+
+        if (url == null || path == null || filename == null) {
+            cancelListening(arguments);
+            return;
+        }
+        File youtubeDLDir = new File(path);
+
+        YoutubeDLRequest request = new YoutubeDLRequest(url);
+        request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
+
+        try {
+            YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {
+                HashMap<String, String> data = new HashMap<>();
+
+                data.put("progress", String.valueOf(progress));
+                data.put("eta", String.valueOf(etaInSeconds));
+
+                handler.post(() -> events.success(data));
+            });
+        } catch (YoutubeDLException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void cancelListening(Object arguments) {
+    listeners.remove(arguments);
   }
 }
