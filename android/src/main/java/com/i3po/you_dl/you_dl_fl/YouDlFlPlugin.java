@@ -2,8 +2,6 @@ package com.i3po.you_dl.you_dl_fl;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Environment;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -11,10 +9,13 @@ import androidx.annotation.NonNull;
 import com.yausername.youtubedl_android.YoutubeDL;
 import com.yausername.youtubedl_android.YoutubeDLException;
 import com.yausername.youtubedl_android.YoutubeDLRequest;
+import com.yausername.youtubedl_android.YoutubeDLResponse;
 import com.yausername.youtubedl_android.mapper.VideoInfo;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import android.os.Handler;
 
@@ -32,6 +33,8 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   private static final String TAG = "YouDlFlPlugin";
   private static boolean isInited;
   private final Handler handler = new Handler();
+  Map<Integer, String> keysMeaning = new HashMap<>();
+
 
   /// The MethodChannel that will the communication between Flutter and native
   /// Android
@@ -52,10 +55,19 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), "you_dl_fl_events");
     eventChannel.setStreamHandler(this);
 
+    initializeKeysMeanings();
     initializeYouDl(flutterPluginBinding.getApplicationContext());
   }
 
-  private void initializeYouDl(Context applicationContext) {
+    private void initializeKeysMeanings() {
+        keysMeaning.put(0, "qualityInt");
+        keysMeaning.put(1, "format");
+        keysMeaning.put(2, "resolution");
+        keysMeaning.put(3, "qualityString");
+        keysMeaning.put(4, "bitrate");
+    }
+
+    private void initializeYouDl(Context applicationContext) {
     try {
       YoutubeDL.getInstance().init(applicationContext);
       isInited = true;
@@ -77,11 +89,60 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
       case "getSingleLink":
         handleGetSingleLink(result, call);
         break;
+        case "getAvailableFormats":
+            handleGetAvailableFormats(result, call);
+            break;
       default:
         result.notImplemented();
         break;
     }
   }
+    private void handleGetAvailableFormats(Result result, MethodCall call) {
+        AsyncTask.execute(() -> {
+            String url = call.argument("url");
+
+            YoutubeDLRequest request = new YoutubeDLRequest(url);
+            request.addOption("-F", url);
+            try {
+                YoutubeDLResponse response =  YoutubeDL.getInstance().execute(request);
+                Map<String, Object> resultData = new HashMap<>();
+                String outStaff = response.getOut();
+                List<Map<String, Object>> availableFormats = new ArrayList<>();
+
+                for (String line : outStaff.split("\\n")) {
+                    line = line.split(",")[0];
+
+                    if (line.matches("\\d.*") && !line.contains("audio only")) {
+                        String[] lineValues = line.split(" ");
+                        Map<String, Object> outData = new HashMap<>();
+
+                        int index = 0;
+                        for (String a : lineValues) {
+                            a = a.trim();
+                            if (a.length() > 0) {
+                                outData.put(keysMeaning.get(index), a);
+                                index += 1;
+                            }
+
+                        }
+                        availableFormats.add(outData);
+                        Log.d(TAG, String.valueOf(outData));
+                    }
+                }
+
+
+                resultData.put("out", availableFormats);
+                resultData.put("exitCode", response.getExitCode());
+                resultData.put("error", response.getErr());
+
+                handler.post(() -> result.success(resultData));
+            } catch (YoutubeDLException | InterruptedException e) {
+                handler.post(() -> result.success(null));
+                e.printStackTrace();
+            }
+        });
+    }
+
 
   private void handleRequestStreamInfo(Result result, MethodCall call) {
     AsyncTask.execute(() -> {

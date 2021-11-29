@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 class YouDlFl {
@@ -17,6 +18,23 @@ class YouDlFl {
     final String? link =
         await _channel.invokeMethod('getSingleLink', {"url": url});
     return link;
+  }
+
+  static Future<List<VideoFormat>> getAvailableFormats(String url) async {
+    final data =
+        await _channel.invokeMethod('getAvailableFormats', {"url": url});
+    Set<VideoFormat> formats = {};
+    
+    if (data['exitCode'] > 0) {
+      throw (data['error']);
+    }
+
+    for (var data in data["out"]) {
+      VideoFormat format = VideoFormat.fromMap(data);
+      formats.add(format);
+    }
+
+    return formats.toList();
   }
 
   // getStreamInfo
@@ -79,4 +97,46 @@ class YoutubeDlVideoInfo {
         thumbnail: json['thumbnail'],
         resolution: json['resolution'],
       );
+}
+
+class VideoFormat {
+  final String qualityString;
+  final String format;
+  final String bitrate;
+  final int qualityInt;
+  final String resolution;
+
+  VideoFormat({
+    required this.qualityString,
+    required this.format,
+    required this.bitrate,
+    required this.qualityInt,
+    required this.resolution,
+  });
+
+  factory VideoFormat.fromMap(Map<dynamic, dynamic> json) => VideoFormat(
+        qualityString: json['qualityString'],
+        format: json["format"],
+        bitrate: json['bitrate'],
+        qualityInt: int.parse(json['qualityInt']),
+        resolution: json['resolution'],
+      );
+
+  @override
+  String toString() {
+    return "$qualityString $format $bitrate $qualityInt $resolution";
+  }
+
+  @override
+  int get hashCode =>
+      hashValues(qualityString, qualityInt, format, bitrate, resolution);
+
+  @override
+  operator ==(o) =>
+      o is VideoFormat &&
+      o.bitrate == bitrate &&
+      o.format == format &&
+      o.qualityString == qualityString &&
+      o.resolution == resolution &&
+      o.qualityInt == qualityInt;
 }

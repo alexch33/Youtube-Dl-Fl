@@ -39,13 +39,11 @@ class _MyAppState extends State<MyApp> {
             setState(() {
               _data = "Loading...";
             });
-            String? link = await YouDlFl.getSinglePlayLink(
-                "https://www.dailymotion.com/video/x85wubx?playlist=x6lgtp");
-            if (link != null) {
-              setState(() {
-                _data = link;
-              });
-            }
+            List<VideoFormat> formats = await YouDlFl.getAvailableFormats(
+                "https://www.youtube.com/watch?v=xymghQVsRVI");
+            setState(() {
+              _data = formats.length.toString();
+            });
           },
         ),
         appBar: AppBar(
