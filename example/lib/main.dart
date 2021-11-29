@@ -40,7 +40,8 @@ class _MyAppState extends State<MyApp> {
               _data = "Loading...";
             });
             List<VideoFormat> formats = await YouDlFl.getAvailableFormats(
-                "https://www.youtube.com/watch?v=xymghQVsRVI");
+                "https://www.dailymotion.com/video/x85wubx?playlist=x6lgtp");
+            // var d = await YouDlFl.getSinglePlayLink("https://www.dailymotion.com/video/x85wubx?playlist=x6lgtp");
             setState(() {
               _data = formats.length.toString();
             });

@@ -60,11 +60,9 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   }
 
     private void initializeKeysMeanings() {
-        keysMeaning.put(0, "qualityInt");
+        keysMeaning.put(0, "quality");
         keysMeaning.put(1, "format");
         keysMeaning.put(2, "resolution");
-        keysMeaning.put(3, "qualityString");
-        keysMeaning.put(4, "bitrate");
     }
 
     private void initializeYouDl(Context applicationContext) {
@@ -105,6 +103,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             request.addOption("-F", url);
             try {
                 YoutubeDLResponse response =  YoutubeDL.getInstance().execute(request);
+
                 Map<String, Object> resultData = new HashMap<>();
                 String outStaff = response.getOut();
                 List<Map<String, Object>> availableFormats = new ArrayList<>();
@@ -112,21 +111,20 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
                 for (String line : outStaff.split("\\n")) {
                     line = line.split(",")[0];
 
-                    if (line.matches("\\d.*") && !line.contains("audio only")) {
-                        String[] lineValues = line.split(" ");
+                    if (line.matches(".*\\d{3}x\\d{3}.*") && !line.contains("audio only") && !line.contains("video only")) {
+                        String[] lineValues = line.split(" +");
                         Map<String, Object> outData = new HashMap<>();
-
                         int index = 0;
                         for (String a : lineValues) {
                             a = a.trim();
                             if (a.length() > 0) {
+                                if (index > 2) continue;
                                 outData.put(keysMeaning.get(index), a);
                                 index += 1;
                             }
 
                         }
                         availableFormats.add(outData);
-                        Log.d(TAG, String.valueOf(outData));
                     }
                 }
 

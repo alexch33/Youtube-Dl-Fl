@@ -100,43 +100,35 @@ class YoutubeDlVideoInfo {
 }
 
 class VideoFormat {
-  final String qualityString;
-  final String format;
-  final String bitrate;
-  final int qualityInt;
+  final String quality;
   final String resolution;
+  String format;
 
   VideoFormat({
-    required this.qualityString,
-    required this.format,
-    required this.bitrate,
-    required this.qualityInt,
+    required this.quality,
     required this.resolution,
+    required this.format
   });
 
   factory VideoFormat.fromMap(Map<dynamic, dynamic> json) => VideoFormat(
-        qualityString: json['qualityString'],
-        format: json["format"],
-        bitrate: json['bitrate'],
-        qualityInt: int.parse(json['qualityInt']),
+        quality: json['quality'],
         resolution: json['resolution'],
+        format: json['format']
       );
 
   @override
   String toString() {
-    return "$qualityString $format $bitrate $qualityInt $resolution";
+    return "$format $quality $resolution";
   }
 
   @override
   int get hashCode =>
-      hashValues(qualityString, qualityInt, format, bitrate, resolution);
+      hashValues(quality, format, resolution);
 
   @override
   operator ==(o) =>
       o is VideoFormat &&
-      o.bitrate == bitrate &&
       o.format == format &&
-      o.qualityString == qualityString &&
       o.resolution == resolution &&
-      o.qualityInt == qualityInt;
+      o.quality == quality;
 }
