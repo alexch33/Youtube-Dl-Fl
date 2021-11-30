@@ -24,7 +24,7 @@ class YouDlFl {
     final data =
         await _channel.invokeMethod('getAvailableFormats', {"url": url});
     Set<VideoFormat> formats = {};
-    
+
     if (data['exitCode'] > 0) {
       throw (data['error']);
     }
@@ -57,6 +57,11 @@ class YouDlFl {
         downloadCallback!(event);
       }
     });
+  }
+
+  static Future<bool> upgradeBinary() async {
+    final result = await _channel.invokeMethod<bool>('upgradeBinary');
+    return result ?? false;
   }
 }
 
@@ -104,17 +109,13 @@ class VideoFormat {
   final String resolution;
   String format;
 
-  VideoFormat({
-    required this.quality,
-    required this.resolution,
-    required this.format
-  });
+  VideoFormat(
+      {required this.quality, required this.resolution, required this.format});
 
   factory VideoFormat.fromMap(Map<dynamic, dynamic> json) => VideoFormat(
-        quality: json['quality'],
-        resolution: json['resolution'],
-        format: json['format']
-      );
+      quality: json['quality'],
+      resolution: json['resolution'],
+      format: json['format']);
 
   @override
   String toString() {
@@ -122,8 +123,7 @@ class VideoFormat {
   }
 
   @override
-  int get hashCode =>
-      hashValues(quality, format, resolution);
+  int get hashCode => hashValues(quality, format, resolution);
 
   @override
   operator ==(o) =>

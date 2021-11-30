@@ -44,6 +44,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
   private EventChannel eventChannel;
+  private Context context;
 
   private Map<Object, Runnable> listeners = new HashMap<>();
 
@@ -68,6 +69,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     private void initializeYouDl(Context applicationContext) {
     try {
       YoutubeDL.getInstance().init(applicationContext);
+      context = applicationContext;
       isInited = true;
     } catch (YoutubeDLException e) {
       isInited = false;
@@ -90,10 +92,25 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
         case "getAvailableFormats":
             handleGetAvailableFormats(result, call);
             break;
+        case "upgradeBinary":
+            upgradeBinary(result);
+            break;
       default:
         result.notImplemented();
         break;
     }
+  }
+
+  private void upgradeBinary(Result result) {
+      AsyncTask.execute(() -> {
+          try {
+              YoutubeDL.getInstance().updateYoutubeDL(context);
+              handler.post(() -> result.success(true));
+          } catch (YoutubeDLException e) {
+              handler.post(() -> result.success(false));
+              e.printStackTrace();
+          }
+      });
   }
     private void handleGetAvailableFormats(Result result, MethodCall call) {
         AsyncTask.execute(() -> {

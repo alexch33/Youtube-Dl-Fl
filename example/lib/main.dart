@@ -39,11 +39,9 @@ class _MyAppState extends State<MyApp> {
             setState(() {
               _data = "Loading...";
             });
-            List<VideoFormat> formats = await YouDlFl.getAvailableFormats(
-                "https://www.dailymotion.com/video/x85wubx?playlist=x6lgtp");
-            // var d = await YouDlFl.getSinglePlayLink("https://www.dailymotion.com/video/x85wubx?playlist=x6lgtp");
+            await YouDlFl.upgradeBinary();
             setState(() {
-              _data = formats.length.toString();
+              _data = "done";
             });
           },
         ),
