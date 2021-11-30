@@ -39,9 +39,10 @@ class _MyAppState extends State<MyApp> {
             setState(() {
               _data = "Loading...";
             });
-            await YouDlFl.upgradeBinary();
+            var a = await YouDlFl.getStreamInfo("https://www.youtube.com/watch?v=VY--3seIhtA", null);
+            print(a?.url);
             setState(() {
-              _data = "done";
+              _data = a?.title;
             });
           },
         ),

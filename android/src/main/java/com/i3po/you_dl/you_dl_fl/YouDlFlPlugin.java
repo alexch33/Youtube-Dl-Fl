@@ -124,9 +124,8 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
                 Map<String, Object> resultData = new HashMap<>();
                 String outStaff = response.getOut();
                 List<Map<String, Object>> availableFormats = new ArrayList<>();
-
+                
                 for (String line : outStaff.split("\\n")) {
-                    line = line.split(",")[0];
 
                     if (line.matches(".*\\d{3}x\\d{3}.*") && !line.contains("audio only") && !line.contains("video only")) {
                         String[] lineValues = line.split(" +");
@@ -162,9 +161,14 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   private void handleRequestStreamInfo(Result result, MethodCall call) {
     AsyncTask.execute(() -> {
         String url = call.argument("url");
+        String format = call.argument("format");
 
         YoutubeDLRequest request = new YoutubeDLRequest(url);
-        request.addOption("-f", "best");
+        if (format == null) {
+            request.addOption("-f", "best");
+        } else {
+            request.addOption("-f", format);
+        }
         VideoInfo streamInfo = null;
         try {
             streamInfo = YoutubeDL.getInstance().getInfo(request);
@@ -192,9 +196,14 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   private void handleGetSingleLink(Result result, MethodCall call) {
     AsyncTask.execute(() -> {
         String url = call.argument("url");
+        String format = call.argument("format");
 
         YoutubeDLRequest request = new YoutubeDLRequest(url);
-        request.addOption("-f", "best");
+        if (format == null) {
+            request.addOption("-f", "best");
+        } else {
+            request.addOption("-f", format);
+        }
         VideoInfo streamInfo = null;
         try {
             streamInfo = YoutubeDL.getInstance().getInfo(request);
