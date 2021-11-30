@@ -163,13 +163,13 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   private void handleRequestStreamInfo(Result result, MethodCall call) {
     AsyncTask.execute(() -> {
         String url = call.argument("url");
-        String format = call.argument("format");
+        String quality = call.argument("quality");
 
         YoutubeDLRequest request = new YoutubeDLRequest(url);
-        if (format == null) {
+        if (quality == null) {
             request.addOption("-f", "best");
         } else {
-            request.addOption("-f", format);
+            request.addOption("-f", quality);
         }
         VideoInfo streamInfo = null;
         try {
@@ -198,13 +198,13 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
   private void handleGetSingleLink(Result result, MethodCall call) {
     AsyncTask.execute(() -> {
         String url = call.argument("url");
-        String format = call.argument("format");
+        String quality = call.argument("quality");
 
         YoutubeDLRequest request = new YoutubeDLRequest(url);
-        if (format == null) {
+        if (quality == null) {
             request.addOption("-f", "best");
         } else {
-            request.addOption("-f", format);
+            request.addOption("-f", quality);
         }
         VideoInfo streamInfo = null;
         try {
@@ -281,7 +281,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
             request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
-            
+
             if (quality == null) {
               request.addOption("-f", "best");
             } else {

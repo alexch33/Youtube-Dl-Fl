@@ -14,9 +14,9 @@ class YouDlFl {
   }
 
   // Get a single playable link containing video+audio
-  static Future<String?> getSinglePlayLink(String url, String? format) async {
+  static Future<String?> getSinglePlayLink(String url, String? quality) async {
     final String? link = await _channel
-        .invokeMethod('getSingleLink', {"url": url, "format": format});
+        .invokeMethod('getSingleLink', {"url": url, "quality": quality});
     return link;
   }
 
@@ -39,9 +39,9 @@ class YouDlFl {
 
   // getStreamInfo
   static Future<YoutubeDlVideoInfo?> getStreamInfo(
-      String url, String? format) async {
+      String url, String? quality) async {
     final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
-        'getStreamInfo', {"url": url, "format": format});
+        'getStreamInfo', {"url": url, "quality": quality});
 
     if (result != null) {
       return YoutubeDlVideoInfo.fromMap(result);
