@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.yausername.ffmpeg.FFmpeg;
 import com.yausername.youtubedl_android.YoutubeDL;
 import com.yausername.youtubedl_android.YoutubeDLException;
 import com.yausername.youtubedl_android.YoutubeDLRequest;
@@ -69,6 +70,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     private void initializeYouDl(Context applicationContext) {
     try {
       YoutubeDL.getInstance().init(applicationContext);
+      FFmpeg.getInstance().init(applicationContext);
       context = applicationContext;
       isInited = true;
     } catch (YoutubeDLException e) {
@@ -263,33 +265,36 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     }
 
     private void handleDownload(Object arguments, EventChannel.EventSink events) {
-        HashMap<String, String> args = (HashMap<String, String>) arguments;
+        AsyncTask.execute(() -> {
+            HashMap<String, String> args = (HashMap<String, String>) arguments;
 
-        String url = args.get("url");
-        String path = args.get("path");
-        String filename = args.get("filename");
+            String url = args.get("url");
+            String path = args.get("path");
+            String filename = args.get("filename");
 
-        if (url == null || path == null || filename == null) {
-            cancelListening(arguments);
-            return;
-        }
-        File youtubeDLDir = new File(path);
+            if (url == null || path == null || filename == null) {
+                cancelListening(arguments);
+                return;
+            }
+            File youtubeDLDir = new File(path);
 
-        YoutubeDLRequest request = new YoutubeDLRequest(url);
-        request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
+            YoutubeDLRequest request = new YoutubeDLRequest(url);
+            request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
+            request.addOption("-f", "best");
 
-        try {
-            YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {
-                HashMap<String, String> data = new HashMap<>();
+            try {
+                YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {
+                    HashMap<String, String> data = new HashMap<>();
 
-                data.put("progress", String.valueOf(progress));
-                data.put("eta", String.valueOf(etaInSeconds));
+                    data.put("progress", String.valueOf(progress));
+                    data.put("eta", String.valueOf(etaInSeconds));
 
-                handler.post(() -> events.success(data));
-            });
-        } catch (YoutubeDLException | InterruptedException e) {
-            e.printStackTrace();
-        }
+                    handler.post(() -> events.success(data));
+                });
+            } catch (YoutubeDLException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void cancelListening(Object arguments) {

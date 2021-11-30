@@ -15,8 +15,8 @@ class YouDlFl {
 
   // Get a single playable link containing video+audio
   static Future<String?> getSinglePlayLink(String url, String? format) async {
-    final String? link =
-        await _channel.invokeMethod('getSingleLink', {"url": url, "format": format});
+    final String? link = await _channel
+        .invokeMethod('getSingleLink', {"url": url, "format": format});
     return link;
   }
 
@@ -38,9 +38,10 @@ class YouDlFl {
   }
 
   // getStreamInfo
-  static Future<YoutubeDlVideoInfo?> getStreamInfo(String url, String? format) async {
-    final result = await _channel
-        .invokeMethod<Map<dynamic, dynamic>>('getStreamInfo', {"url": url, "format": format});
+  static Future<YoutubeDlVideoInfo?> getStreamInfo(
+      String url, String? format) async {
+    final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getStreamInfo', {"url": url, "format": format});
 
     if (result != null) {
       return YoutubeDlVideoInfo.fromMap(result);
@@ -49,13 +50,16 @@ class YouDlFl {
     return null;
   }
 
-  static void startDownload(String url, String downloadPath, String filename) {
-    var subscription = _eventChannel.receiveBroadcastStream(
-        {"url": url, "path": downloadPath, "filename": filename});
-    subscription.listen((event) {
-      if (downloadCallback != null) {
-        downloadCallback!(event);
-      }
+  static Future<void> startDownload(
+      String url, String downloadPath, String filename) async {
+    await Future.delayed(Duration.zero, () {
+      var subscription = _eventChannel.receiveBroadcastStream(
+          {"url": url, "path": downloadPath, "filename": filename});
+      subscription.listen((event) {
+        if (downloadCallback != null) {
+          downloadCallback!(event);
+        }
+      });
     });
   }
 
