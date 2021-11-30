@@ -271,6 +271,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             String url = args.get("url");
             String path = args.get("path");
             String filename = args.get("filename");
+            String quality = args.get("quality");
 
             if (url == null || path == null || filename == null) {
                 cancelListening(arguments);
@@ -280,7 +281,13 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
             request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
-            request.addOption("-f", "best");
+            
+            if (quality == null) {
+              request.addOption("-f", "best");
+            } else {
+              request.addOption("-f", quality);
+            }
+
 
             try {
                 YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {

@@ -51,10 +51,14 @@ class YouDlFl {
   }
 
   static Future<void> startDownload(
-      String url, String downloadPath, String filename) async {
+      String url, String downloadPath, String filename, String? quality) async {
     await Future.delayed(Duration.zero, () {
-      var subscription = _eventChannel.receiveBroadcastStream(
-          {"url": url, "path": downloadPath, "filename": filename});
+      var subscription = _eventChannel.receiveBroadcastStream({
+        "url": url,
+        "path": downloadPath,
+        "filename": filename,
+        "quality": quality
+      });
       subscription.listen((event) {
         if (downloadCallback != null) {
           downloadCallback!(event);
