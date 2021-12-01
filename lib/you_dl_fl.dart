@@ -66,7 +66,7 @@ class YouDlFl {
       });
     });
 
-    return "$url:$downloadPath/$filename";
+    return "$url:$downloadPath/$filename:${quality ?? "best"}";
   }
 
   static Future<bool> upgradeBinary() async {
