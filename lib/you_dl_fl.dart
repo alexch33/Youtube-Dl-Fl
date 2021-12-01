@@ -50,7 +50,7 @@ class YouDlFl {
     return null;
   }
 
-  static Future<void> startDownload(
+  static Future<String> startDownload(
       String url, String downloadPath, String filename, String? quality) async {
     await Future.delayed(Duration.zero, () {
       var subscription = _eventChannel.receiveBroadcastStream({
@@ -65,6 +65,8 @@ class YouDlFl {
         }
       });
     });
+
+    return "$url:$downloadPath/$filename";
   }
 
   static Future<bool> upgradeBinary() async {

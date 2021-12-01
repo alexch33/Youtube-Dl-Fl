@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'package:you_dl_fl/you_dl_fl.dart';
 
@@ -15,6 +16,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? _data;
+  String id = '';
 
   @override
   void initState() {
@@ -39,10 +41,16 @@ class _MyAppState extends State<MyApp> {
             setState(() {
               _data = "Loading...";
             });
-            var a = await YouDlFl.getStreamInfo("https://www.youtube.com/watch?v=VY--3seIhtA", null);
-            print(a?.url);
+            var dataDir = await getExternalStorageDirectory();
+
+            id = await YouDlFl.startDownload(
+                "https://www.imdb.com/video/vi3877612057",
+                dataDir!.path,
+                "tesst.mp4",
+                null);
+
             setState(() {
-              _data = a?.title;
+              _data = id;
             });
           },
         ),

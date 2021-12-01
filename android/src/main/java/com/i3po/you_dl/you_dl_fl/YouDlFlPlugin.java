@@ -265,19 +265,28 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     }
 
     private void handleDownload(Object arguments, EventChannel.EventSink events) {
+        HashMap<String, String> args = (HashMap<String, String>) arguments;
+
+        String url = args.get("url");
+        String path = args.get("path");
+        String filename = args.get("filename");
+        String quality = args.get("quality");
+
+        File youtubeDLDir;
+        if (path != null) {
+            youtubeDLDir = new File(path);
+        } else {
+            handler.post(() -> events.success(null));
+            return;
+        }
+
+        String id = url + ":" + youtubeDLDir.getAbsolutePath() + "/" + filename + ":" + (quality == null ? "best" : quality);
+
         AsyncTask.execute(() -> {
-            HashMap<String, String> args = (HashMap<String, String>) arguments;
-
-            String url = args.get("url");
-            String path = args.get("path");
-            String filename = args.get("filename");
-            String quality = args.get("quality");
-
-            if (url == null || path == null || filename == null) {
+            if (url == null || filename == null) {
                 cancelListening(arguments);
                 return;
             }
-            File youtubeDLDir = new File(path);
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
             request.addOption("-o", youtubeDLDir.getAbsolutePath() + "/" + filename);
@@ -288,13 +297,14 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
               request.addOption("-f", quality);
             }
 
-
             try {
                 YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {
                     HashMap<String, String> data = new HashMap<>();
 
                     data.put("progress", String.valueOf(progress));
                     data.put("eta", String.valueOf(etaInSeconds));
+                    data.put("id", id);
+                    data.put("isRunning", String.valueOf(true));
 
                     handler.post(() -> events.success(data));
                 });
@@ -302,6 +312,13 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
                 e.printStackTrace();
             }
         });
+
+        HashMap<String, String> data = new HashMap<>();
+
+        data.put("id", id);
+        data.put("isRunning", String.valueOf(false));
+
+        handler.post(() -> events.success(data));
     }
 
     private void cancelListening(Object arguments) {
