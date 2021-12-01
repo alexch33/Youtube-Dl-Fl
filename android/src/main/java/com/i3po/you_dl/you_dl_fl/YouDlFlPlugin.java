@@ -280,7 +280,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             File youtubeDLDir = new File(path);
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
-            request.addOption("-o", youtubeDLDir.getAbsolutePath() + File.pathSeparator + filename);
+            request.addOption("-o", youtubeDLDir.getAbsolutePath() + "/" + filename);
 
             if (quality == null) {
               request.addOption("-f", "best");
