@@ -17,6 +17,14 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String? _data;
   String id = '';
+  static const args = [
+    {"--add-header": 'Accept-Encoding:"identity;q=1, *;q=0"'},
+    {'--add-header': 'Referer:"https://www.imdb.com/video/vi3877612057"'},
+    {
+      '--add-header':
+          'User-Agent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36"'
+    }
+  ];
 
   @override
   void initState() {
@@ -47,7 +55,8 @@ class _MyAppState extends State<MyApp> {
                 "https://www.imdb.com/video/vi3877612057",
                 dataDir!.path,
                 "tesst.mp4",
-                null);
+                null,
+                arguments: args);
 
             setState(() {
               _data = id;

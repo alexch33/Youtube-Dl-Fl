@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import android.os.Handler;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -119,6 +121,14 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             String url = call.argument("url");
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
+            List<HashMap<String, String>> additioanlargs = new ArrayList<>();
+            try {
+                additioanlargs = call.argument("arguments");
+            } catch (Error e) {
+                e.printStackTrace();
+            }
+            handleAdditionalArguments(request, additioanlargs);
+
             request.addOption("-F", url);
             try {
                 YoutubeDLResponse response =  YoutubeDL.getInstance().execute(request);
@@ -166,6 +176,15 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
         String quality = call.argument("quality");
 
         YoutubeDLRequest request = new YoutubeDLRequest(url);
+
+        List<HashMap<String, String>> additioanlargs = new ArrayList<>();
+        try {
+            additioanlargs = call.argument("arguments");
+        } catch (Error e) {
+            e.printStackTrace();
+        }
+        handleAdditionalArguments(request, additioanlargs);
+
         if (quality == null) {
             request.addOption("-f", "best");
         } else {
@@ -207,6 +226,15 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             request.addOption("-f", quality);
         }
         VideoInfo streamInfo = null;
+
+        List<HashMap<String, String>> additioanlargs = new ArrayList<>();
+        try {
+            additioanlargs = call.argument("arguments");
+        } catch (Error e) {
+            e.printStackTrace();
+        }
+        handleAdditionalArguments(request, additioanlargs);
+
         try {
             streamInfo = YoutubeDL.getInstance().getInfo(request);
             VideoInfo finalStreamInfo = streamInfo;
@@ -265,36 +293,39 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
     }
 
     private void handleDownload(Object arguments, EventChannel.EventSink events) {
-        HashMap<String, String> args = (HashMap<String, String>) arguments;
+        HashMap<String, Object> args = (HashMap<String, Object>) arguments;
 
-        String url = args.get("url");
-        String path = args.get("path");
-        String filename = args.get("filename");
-        String quality = args.get("quality");
+        String url = Objects.requireNonNull(args.get("url")).toString();
+        String path = Objects.requireNonNull(args.get("path")).toString();
+        String filename = Objects.requireNonNull(args.get("filename")).toString();
+        String quality = null;
+        if (args.get("quality") != null) {
+            quality = Objects.requireNonNull(args.get("quality")).toString();
+        }
 
         File youtubeDLDir;
-        if (path != null) {
-            youtubeDLDir = new File(path);
-        } else {
-            handler.post(() -> events.success(null));
-            return;
-        }
+        youtubeDLDir = new File(path);
 
         String id = url + ":" + youtubeDLDir.getAbsolutePath() + "/" + filename + ":" + (quality == null ? "best" : quality);
 
+        String finalQuality = quality;
         AsyncTask.execute(() -> {
-            if (url == null || filename == null) {
-                cancelListening(arguments);
-                return;
-            }
 
             YoutubeDLRequest request = new YoutubeDLRequest(url);
             request.addOption("-o", youtubeDLDir.getAbsolutePath() + "/" + filename);
+            List<HashMap<String, String>> additioanlargs = new ArrayList<>();
+            try {
+                additioanlargs = (List<HashMap<String, String>>) args.get("arguments");
+            } catch (Error e) {
+                e.printStackTrace();
+            }
 
-            if (quality == null) {
+            handleAdditionalArguments(request, additioanlargs);
+
+            if (finalQuality == null) {
               request.addOption("-f", "best");
             } else {
-              request.addOption("-f", quality);
+              request.addOption("-f", finalQuality);
             }
 
             try {
@@ -319,6 +350,19 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
         data.put("isRunning", String.valueOf(false));
 
         handler.post(() -> events.success(data));
+    }
+
+    private void handleAdditionalArguments(YoutubeDLRequest request, List<HashMap<String, String>> args) {
+      if (args == null) {
+          Log.d(TAG, "Args is NULL returning...");
+          return;
+      }
+
+      for (Map<String, String> currentArgs : args) {
+          for (Map.Entry<String, String> entry : currentArgs.entrySet()) {
+              request.addOption(entry.getKey(), entry.getValue());
+          }
+      }
     }
 
     private void cancelListening(Object arguments) {

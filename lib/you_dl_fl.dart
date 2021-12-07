@@ -14,15 +14,17 @@ class YouDlFl {
   }
 
   // Get a single playable link containing video+audio
-  static Future<String?> getSinglePlayLink(String url, String? quality) async {
-    final String? link = await _channel
-        .invokeMethod('getSingleLink', {"url": url, "quality": quality});
+  static Future<String?> getSinglePlayLink(String url, String? quality,
+      {List<Map<String, String>> arguments = const []}) async {
+    final String? link = await _channel.invokeMethod('getSingleLink',
+        {"url": url, "quality": quality, "arguments": arguments});
     return link;
   }
 
-  static Future<List<VideoFormat>> getAvailableFormats(String url) async {
-    final data =
-        await _channel.invokeMethod('getAvailableFormats', {"url": url});
+  static Future<List<VideoFormat>> getAvailableFormats(String url,
+      {List<Map<String, String>> arguments = const []}) async {
+    final data = await _channel.invokeMethod(
+        'getAvailableFormats', {"url": url, "arguments": arguments});
     Set<VideoFormat> formats = {};
 
     if (data['exitCode'] > 0) {
@@ -38,10 +40,11 @@ class YouDlFl {
   }
 
   // getStreamInfo
-  static Future<YoutubeDlVideoInfo?> getStreamInfo(
-      String url, String? quality) async {
+  static Future<YoutubeDlVideoInfo?> getStreamInfo(String url, String? quality,
+      {List<Map<String, String>> arguments = const []}) async {
     final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
-        'getStreamInfo', {"url": url, "quality": quality});
+        'getStreamInfo',
+        {"url": url, "quality": quality, "arguments": arguments});
 
     if (result != null) {
       return YoutubeDlVideoInfo.fromMap(result);
@@ -51,13 +54,15 @@ class YouDlFl {
   }
 
   static Future<String> startDownload(
-      String url, String downloadPath, String filename, String? quality) async {
+      String url, String downloadPath, String filename, String? quality,
+      {List<Map<String, String>> arguments = const []}) async {
     await Future.delayed(Duration.zero, () {
       var subscription = _eventChannel.receiveBroadcastStream({
         "url": url,
         "path": downloadPath,
         "filename": filename,
-        "quality": quality
+        "quality": quality,
+        "arguments": arguments
       });
       subscription.listen((event) {
         if (downloadCallback != null) {
