@@ -1,3 +1,4 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.i3po.you_dl.you_dl_fl">
+  <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>
