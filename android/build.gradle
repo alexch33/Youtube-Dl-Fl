@@ -1,5 +1,5 @@
 group 'com.i3po.you_dl.you_dl_fl'
-version '1.0'
+version '0.0.3'
 
 buildscript {
     repositories {
