@@ -329,7 +329,7 @@ public class YouDlFlPlugin implements FlutterPlugin, MethodCallHandler, EventCha
             }
 
             try {
-                YoutubeDL.getInstance().execute(request, (progress, etaInSeconds) -> {
+                YoutubeDL.getInstance().execute(request, (progress, etaInSeconds, line) -> {
                     HashMap<String, String> data = new HashMap<>();
 
                     data.put("progress", String.valueOf(progress));

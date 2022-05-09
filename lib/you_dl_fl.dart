@@ -141,9 +141,9 @@ class VideoFormat {
   int get hashCode => hashValues(quality, format, resolution);
 
   @override
-  operator ==(o) =>
-      o is VideoFormat &&
-      o.format == format &&
-      o.resolution == resolution &&
-      o.quality == quality;
+  operator ==(other) =>
+      other is VideoFormat &&
+      other.format == format &&
+      other.resolution == resolution &&
+      other.quality == quality;
 }
